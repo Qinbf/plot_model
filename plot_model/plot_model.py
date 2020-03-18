@@ -304,13 +304,13 @@ def model_to_dot(model,
   return dot
 
 
-def plot(model,
-         to_file='model.png',
-         show_shapes=True,
-         show_layer_names=False,
-         rankdir='TB',
-         expand_nested=False,
-         dpi=96):
+def plot_model(model,
+         	to_file='model.png',
+         	show_shapes=True,
+         	show_layer_names=False,
+         	rankdir='TB',
+         	expand_nested=False,
+         	dpi=96):
   """Converts a Keras model to dot format and save to a file.
 
   Arguments:
