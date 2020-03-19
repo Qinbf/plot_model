@@ -75,11 +75,14 @@ plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=False,
 
 ## Examples
 <h5 align="center">ResNet</h5>
-<img src="https://raw.githubusercontent.com/Qinbf/plot_model/master/img/2.png" width = 25% height = 25% align=center/>
- 
+<p align="center"><img  src="https://raw.githubusercontent.com/Qinbf/plot_model/master/img/2.png" width="25%" height="25%"></p>
+
  
 <h5 align="center">Inception</h5>
-<img src="https://raw.githubusercontent.com/Qinbf/plot_model/master/img/3.png" width = 50% height = 50% align=center/>
+<p align="center"><img  src="https://raw.githubusercontent.com/Qinbf/plot_model/master/img/3.png" width="50%" height="50%"></p>
+ 
  
 <h5 align="center">ResNeXt</h5>
-<img src="https://raw.githubusercontent.com/Qinbf/plot_model/master/img/4.png" width = 50% height = 50% align=center/>
+<p align="center"><img  src="https://raw.githubusercontent.com/Qinbf/plot_model/master/img/4.png" width="65%" height="65%"></p>
+
+
