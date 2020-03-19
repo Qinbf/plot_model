@@ -46,10 +46,12 @@ def is_wrapped_model(layer):
           isinstance(layer.layer, network.Network))
 
 
-def add_edge(dot, src, dst):
+def add_edge(dot, src, dst, output_shape=None):
   if not dot.get_edge(src, dst):
-    dot.add_edge(pydot.Edge(src, dst))
-
+    if output_shape:
+      dot.add_edge(pydot.Edge(src, dst, label=output_shape))
+    else:
+      dot.add_edge(pydot.Edge(src, dst))
 
 def model_to_dot(model,
                  show_shapes=False,
@@ -57,6 +59,8 @@ def model_to_dot(model,
                  rankdir='TB',
                  expand_nested=False,
                  dpi=96,
+                 style=0,
+                 color=True,
                  subgraph=False):
   """Convert a Keras model to dot format.
 
@@ -70,6 +74,8 @@ def model_to_dot(model,
         'LR' creates a horizontal plot.
     expand_nested: whether to expand nested models into clusters.
     dpi: Dots per inch.
+    style: value 0,1.
+    color: whether to display color.
     subgraph: whether to return a `pydot.Cluster` instance.
 
   Returns:
@@ -119,6 +125,7 @@ def model_to_dot(model,
     if not model.built:
       model.build()
   layers = model._layers
+  num_layers = len(layers)
 
   # Create graph nodes.
   for i, layer in enumerate(layers):
@@ -248,16 +255,69 @@ def model_to_dot(model,
             [format_shape(ishape) for ishape in layer.input_shapes])
       else:
         inputlabels = '?'
-      label = '{%s}|{input:|output:}|{{%s}|{%s}}' % (label,
-                                                     inputlabels,
-                                                     outputlabels)
+
+      if style == 0:
+        if i == 0:
+          label = '{%s}|{input:}|{%s}' % (label,
+                                        inputlabels)
+        elif i == num_layers-1:
+          label = '{%s}|{output:}|{%s}' % (label,
+                                          outputlabels)
+        else:
+          label = '{%s}' % (label)
+      elif style == 1:
+        label = '{%s}|{input:|output:}|{{%s}|{%s}}' % (label,
+                                                      inputlabels,
+                                                      outputlabels)
+ 
 
     if not expand_nested or not isinstance(layer, network.Network):
-      node = pydot.Node(layer_id, label=label)
+      if color == True:
+        inputs = re.compile('input')
+        conv = re.compile('conv')
+        pool = re.compile('pool')
+        normalization = re.compile('normalization')
+        activation = re.compile('activation')
+        dropout = re.compile('dropout') 
+        dense = re.compile('dense') 
+        padding = re.compile('padding')
+        concatenate = re.compile('concatenate')
+        rnn = re.compile('rnn')
+        lstm = re.compile('lstm')
+        gru = re.compile('gru')
+        if inputs.findall(config['name']):
+          node = pydot.Node(layer_id, label=label,  fillcolor='deeppink', style="filled")
+        elif conv.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='cyan', style="filled")
+        elif pool.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='chartreuse', style="filled")
+        elif normalization.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='dodgerblue1', style="filled")
+        elif activation.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='pink', style="filled")
+        elif dropout.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='darkorange', style="filled")
+        elif dense.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='darkorchid1', style="filled")
+        elif padding.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='beige', style="filled")
+        elif concatenate.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='tomato', style="filled")
+        elif rnn.findall(config['name']) or lstm.findall(config['name']) or gru.findall(config['name']):
+          node = pydot.Node(layer_id, label=label, fillcolor='yellow1', style="filled")
+        else:
+          node = pydot.Node(layer_id, label=label, fillcolor='gold', style="filled")
+      else:
+        node = pydot.Node(layer_id, label=label)
       dot.add_node(node)
 
   # Connect nodes with edges.
-  for layer in layers:
+  for j, layer in enumerate(layers):
+    # print(layer)
+    # print(layer.output_shape)
+    def format_shape(shape):
+        return str(shape).replace(str(None), '?')
+
     layer_id = str(id(layer))
     for i, node in enumerate(layer._inbound_nodes):
       node_key = layer.name + '_ib-' + str(i)
@@ -267,7 +327,10 @@ def model_to_dot(model,
           if not expand_nested:
             assert dot.get_node(inbound_layer_id)
             assert dot.get_node(layer_id)
-            add_edge(dot, inbound_layer_id, layer_id)
+            if style == 0:
+              add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+            elif style == 1:
+              add_edge(dot, inbound_layer_id, layer_id)
           else:
             # if inbound_layer is not Model or wrapped Model
             if (not isinstance(inbound_layer, network.Network) and
@@ -277,30 +340,56 @@ def model_to_dot(model,
                   not is_wrapped_model(layer)):
                 assert dot.get_node(inbound_layer_id)
                 assert dot.get_node(layer_id)
-                add_edge(dot, inbound_layer_id, layer_id)
+                if style == 0:
+                  add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+                elif style == 1:
+                  add_edge(dot, inbound_layer_id, layer_id)
               # if current layer is Model
               elif isinstance(layer, network.Network):
-                add_edge(dot, inbound_layer_id,
-                         sub_n_first_node[layer.name].get_name())
+                if style == 0:
+                  add_edge(dot, inbound_layer_id,
+                          sub_n_first_node[layer.name].get_name(),
+                          format_shape(inbound_layer.output_shape))
+                elif style == 1:
+                  add_edge(dot, inbound_layer_id,
+                          sub_n_first_node[layer.name].get_name())
               # if current layer is wrapped Model
               elif is_wrapped_model(layer):
-                add_edge(dot, inbound_layer_id, layer_id)
-                name = sub_w_first_node[layer.layer.name].get_name()
-                add_edge(dot, layer_id, name)
+                if style == 0:
+                  add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+                  name = sub_w_first_node[layer.layer.name].get_name()
+                  add_edge(dot, layer_id, name, format_shape(layer.output_shape))
+                elif style == 1:
+                  add_edge(dot, inbound_layer_id, layer_id)
+                  name = sub_w_first_node[layer.layer.name].get_name()
+                  add_edge(dot, layer_id, name)
             # if inbound_layer is Model
             elif isinstance(inbound_layer, network.Network):
               name = sub_n_last_node[inbound_layer.name].get_name()
               if isinstance(layer, network.Network):
                 output_name = sub_n_first_node[layer.name].get_name()
-                add_edge(dot, name, output_name)
+                if style == 0:
+                  add_edge(dot, name, output_name, format_shape(layer.output_shape))
+                elif style == 1:
+                  add_edge(dot, name, output_name)
               else:
-                add_edge(dot, name, layer_id)
+                if style == 0:
+                  add_edge(dot, name, layer_id, format_shape(layer.output_shape))
+                elif style == 1:
+                  add_edge(dot, name, layer_id)
             # if inbound_layer is wrapped Model
             elif is_wrapped_model(inbound_layer):
               inbound_layer_name = inbound_layer.layer.name
-              add_edge(dot,
-                       sub_w_last_node[inbound_layer_name].get_name(),
-                       layer_id)
+              if style == 0:
+                add_edge(dot,
+                        sub_w_last_node[inbound_layer_name].get_name(),
+                        layer_id,
+                        format_shape(inbound_layer.output_shape))
+              elif style == 1:
+                add_edge(dot,
+                        sub_w_last_node[inbound_layer_name].get_name(),
+                        layer_id)
+         
   return dot
 
 
@@ -310,6 +399,8 @@ def plot_model(model,
          	show_layer_names=False,
          	rankdir='TB',
          	expand_nested=False,
+          style = 0,
+          color = True,
          	dpi=96):
   """Converts a Keras model to dot format and save to a file.
 
@@ -323,17 +414,22 @@ def plot_model(model,
         'TB' creates a vertical plot;
         'LR' creates a horizontal plot.
     expand_nested: Whether to expand nested models into clusters.
+    style: value 0,1.
+    color: whether to display color.
     dpi: Dots per inch.
 
   Returns:
     A Jupyter notebook Image object if Jupyter is installed.
     This enables in-line display of the model plots in notebooks.
   """
+  assert(style == 0 or style == 1)
   dot = model_to_dot(model,
                      show_shapes=show_shapes,
                      show_layer_names=show_layer_names,
                      rankdir=rankdir,
                      expand_nested=expand_nested,
+                     style = style,
+                     color = color,
                      dpi=dpi)
   if dot is None:
     return
