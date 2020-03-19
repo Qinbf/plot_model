@@ -1,5 +1,7 @@
 ## plot_model
 
+GitHub:[https://github.com/Qinbf/plot_model.git](https://github.com/Qinbf/plot_model.git)
+
 plot_model is a API for model visualization reference to [tensorflow.keras.utils.plot_model](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/utils/vis_utils.py).
 
  <p align="center"><img  src="https://raw.githubusercontent.com/Qinbf/plot_model/master/img/1.png" width="50%" height="50%"></p>
