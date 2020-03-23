@@ -260,11 +260,14 @@ def model_to_dot(model,
         if i == 0:
           label = '{%s}|{input:}|{%s}' % (label,
                                         inputlabels)
-        elif i == num_layers-1:
-          label = '{%s}|{output:}|{%s}' % (label,
-                                          outputlabels)
-        else:
-          label = '{%s}' % (label)
+        else:                  
+          for i,node in enumerate(layer._inbound_nodes):
+            for outbound_layer in nest.flatten(node.outbound_layer):
+              if outbound_layer.outbound_nodes == []:
+                label = '{%s}|{output:}|{%s}' % (label,
+                                            outputlabels)
+              else:
+                label = '{%s}' % (label)
       elif style == 1:
         label = '{%s}|{input:|output:}|{{%s}|{%s}}' % (label,
                                                       inputlabels,
