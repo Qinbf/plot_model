@@ -134,6 +134,7 @@ def model_to_dot(model,
     # Append a wrapped layer's label to node's label, if it exists.
     layer_name = layer.name
     class_name = layer.__class__.__name__
+    class_name_lower = class_name.lower()
     config = 0
     try:
         config = layer.get_config()
@@ -172,36 +173,36 @@ def model_to_dot(model,
     if show_layer_names:
       label = '{}: {}'.format(layer_name, class_name)
       inputs = re.compile('input')
-      if inputs.findall(config['name']):
+      if inputs.findall(class_name_lower):
         pass
       else:
         if config != 0:
           conv = re.compile('conv')
-          if conv.findall(config['name']):
+          if conv.findall(class_name_lower):
             label = '{}:{},{}|kernel:{}  strides:{}'.format(layer_name,
                                                             class_name,
                                                             config['padding'],
                                                             config['kernel_size'],
                                                             config['strides'] )
           pool = re.compile('pool')
-          if pool.findall(config['name']) and config['name'][:6]!='global':
+          if pool.findall(class_name_lower) and class_name_lower[:6]!='global':
             label = '{}:{},{}|kernel:{}  strides:{}'.format(layer_name,
                                                             class_name,
                                                             config['padding'],
                                                             config['pool_size'],
                                                             config['strides'] )   
           activation = re.compile('activation')
-          if activation.findall(config['name']):
+          if activation.findall(class_name_lower):
             label = '{}:{}|{}'.format(layer_name,
                                       class_name,
                                       config['activation'])
           dropout = re.compile('dropout') 
-          if dropout.findall(config['name']):
+          if dropout.findall(class_name_lower):
             label = '{}:{}|{}'.format(layer_name,
                                       class_name,
                                       config['rate'])
           dense = re.compile('dense') 
-          if dense.findall(config['name']):
+          if dense.findall(class_name_lower):
             label = '{}:{}|{}'.format(layer_name,
                                       class_name,
                                       config['activation'])
@@ -209,32 +210,32 @@ def model_to_dot(model,
     else:
       label = '{}'.format(class_name)
       inputs = re.compile('input')
-      if inputs.findall(config['name']):
+      if inputs.findall(class_name_lower):
         pass
       else:
         if config != 0:
           conv = re.compile('conv')
-          if conv.findall(config['name']):
+          if conv.findall(class_name_lower):
             label = '{},{}|kernel:{}  strides:{}'.format(class_name,
                                                          config['padding'],
                                                          config['kernel_size'],
                                                          config['strides'])
           pool = re.compile('pool')
-          if pool.findall(config['name']) and config['name'][:6]!='global':
+          if pool.findall(class_name_lower) and class_name_lower[:6]!='global':
             label = '{},{}|kernel:{}  strides:{}'.format(class_name,
                                                          config['padding'],
                                                          config['pool_size'],
                                                          config['strides']) 
           activation = re.compile('activation')
-          if activation.findall(config['name']):
+          if activation.findall(class_name_lower):
             label = '{}|{}'.format(class_name,
                                    config['activation']) 
           dropout = re.compile('dropout') 
-          if dropout.findall(config['name']):
+          if dropout.findall(class_name_lower):
             label = '{}|{}'.format(class_name,
                                    config['rate'])
           dense = re.compile('dense') 
-          if dense.findall(config['name']):
+          if dense.findall(class_name_lower):
             label = '{}|{}'.format(class_name,
                                    config['activation'])
 
@@ -257,7 +258,8 @@ def model_to_dot(model,
         inputlabels = '?'
 
       if style == 0:
-        if i == 0:
+        inputs = re.compile('input')
+        if inputs.findall(class_name_lower):
           label = '{%s}|{input:}|{%s}' % (label,
                                         inputlabels)
         else:                  
@@ -288,25 +290,25 @@ def model_to_dot(model,
         rnn = re.compile('rnn')
         lstm = re.compile('lstm')
         gru = re.compile('gru')
-        if inputs.findall(config['name']):
+        if inputs.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label,  fillcolor='deeppink', style="filled")
-        elif conv.findall(config['name']):
+        elif conv.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='cyan', style="filled")
-        elif pool.findall(config['name']):
+        elif pool.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='chartreuse', style="filled")
-        elif normalization.findall(config['name']):
+        elif normalization.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='dodgerblue1', style="filled")
-        elif activation.findall(config['name']):
+        elif activation.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='pink', style="filled")
-        elif dropout.findall(config['name']):
+        elif dropout.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='darkorange', style="filled")
-        elif dense.findall(config['name']):
+        elif dense.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='darkorchid1', style="filled")
-        elif padding.findall(config['name']):
+        elif padding.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='beige', style="filled")
-        elif concatenate.findall(config['name']):
+        elif concatenate.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='tomato', style="filled")
-        elif rnn.findall(config['name']) or lstm.findall(config['name']) or gru.findall(config['name']):
+        elif rnn.findall(class_name_lower) or lstm.findall(class_name_lower) or gru.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='yellow1', style="filled")
         else:
           node = pydot.Node(layer_id, label=label, fillcolor='gold', style="filled")
