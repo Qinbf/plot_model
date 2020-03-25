@@ -290,6 +290,7 @@ def model_to_dot(model,
         rnn = re.compile('rnn')
         lstm = re.compile('lstm')
         gru = re.compile('gru')
+        bidirectional = re.compile('bidirectional')
         if inputs.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label,  fillcolor='deeppink', style="filled")
         elif conv.findall(class_name_lower):
@@ -308,7 +309,7 @@ def model_to_dot(model,
           node = pydot.Node(layer_id, label=label, fillcolor='beige', style="filled")
         elif concatenate.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='tomato', style="filled")
-        elif rnn.findall(class_name_lower) or lstm.findall(class_name_lower) or gru.findall(class_name_lower):
+        elif rnn.findall(class_name_lower) or lstm.findall(class_name_lower) or gru.findall(class_name_lower) or bidirectional.findall(class_name_lower):
           node = pydot.Node(layer_id, label=label, fillcolor='yellow1', style="filled")
         else:
           node = pydot.Node(layer_id, label=label, fillcolor='gold', style="filled")
