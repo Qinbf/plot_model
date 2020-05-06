@@ -334,7 +334,10 @@ def model_to_dot(model,
             assert dot.get_node(inbound_layer_id)
             assert dot.get_node(layer_id)
             if style == 0:
-              add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+              try:
+                add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+              except:
+                add_edge(dot, inbound_layer_id, layer_id, '?')
             elif style == 1:
               add_edge(dot, inbound_layer_id, layer_id)
           else:
@@ -347,7 +350,10 @@ def model_to_dot(model,
                 assert dot.get_node(inbound_layer_id)
                 assert dot.get_node(layer_id)
                 if style == 0:
-                  add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+                  try:
+                    add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+                  except:
+                    add_edge(dot, inbound_layer_id, layer_id, '?')
                 elif style == 1:
                   add_edge(dot, inbound_layer_id, layer_id)
               # if current layer is Model
@@ -362,7 +368,10 @@ def model_to_dot(model,
               # if current layer is wrapped Model
               elif is_wrapped_model(layer):
                 if style == 0:
-                  add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+                  try:
+                    add_edge(dot, inbound_layer_id, layer_id, format_shape(inbound_layer.output_shape))
+                  except:
+                    add_edge(dot, inbound_layer_id, layer_id, '?')
                   name = sub_w_first_node[layer.layer.name].get_name()
                   add_edge(dot, layer_id, name, format_shape(layer.output_shape))
                 elif style == 1:
@@ -375,22 +384,34 @@ def model_to_dot(model,
               if isinstance(layer, network.Network):
                 output_name = sub_n_first_node[layer.name].get_name()
                 if style == 0:
-                  add_edge(dot, name, output_name, format_shape(layer.output_shape))
+                  try:
+                    add_edge(dot, name, output_name, format_shape(layer.output_shape))
+                  except:
+                    add_edge(dot, name, output_name, '?')
                 elif style == 1:
                   add_edge(dot, name, output_name)
               else:
                 if style == 0:
-                  add_edge(dot, name, layer_id, format_shape(layer.output_shape))
+                  try:
+                    add_edge(dot, name, layer_id, format_shape(layer.output_shape))
+                  except:
+                    add_edge(dot, name, layer_id, '?')
                 elif style == 1:
                   add_edge(dot, name, layer_id)
             # if inbound_layer is wrapped Model
             elif is_wrapped_model(inbound_layer):
               inbound_layer_name = inbound_layer.layer.name
               if style == 0:
-                add_edge(dot,
-                        sub_w_last_node[inbound_layer_name].get_name(),
-                        layer_id,
-                        format_shape(inbound_layer.output_shape))
+                try:
+                  add_edge(dot,
+                          sub_w_last_node[inbound_layer_name].get_name(),
+                          layer_id,
+                          format_shape(inbound_layer.output_shape))
+                except:
+                  add_edge(dot,
+                          sub_w_last_node[inbound_layer_name].get_name(),
+                          layer_id,
+                          '?')
               elif style == 1:
                 add_edge(dot,
                         sub_w_last_node[inbound_layer_name].get_name(),
