@@ -9,6 +9,10 @@ import sys
 import re
 from tensorflow.python.util import nest
 from tensorflow.python.util.tf_export import keras_export
+try:
+    from tensorflow.python.keras.engine.functional import Functional as Functional_or_Network
+except ModuleNotFoundError:
+    from tensorflow.python.keras.engine.network import Network as Functional_or_Network
 
 
 try:
@@ -35,15 +39,14 @@ def check_pydot():
     # to check the pydot/graphviz installation.
     pydot.Dot.create(pydot.Dot())
     return True
-  except OSError:
+  except (OSError, pydot.InvocationException):
     return False
 
 
 def is_wrapped_model(layer):
-  from tensorflow.python.keras.engine import network
   from tensorflow.python.keras.layers import wrappers
   return (isinstance(layer, wrappers.Wrapper) and
-          isinstance(layer.layer, network.Network))
+          isinstance(layer.layer, Functional_or_Network))
 
 
 def add_edge(dot, src, dst, output_shape=None):
@@ -88,7 +91,6 @@ def model_to_dot(model,
   """
   from tensorflow.python.keras.layers import wrappers
   from tensorflow.python.keras.engine import sequential
-  from tensorflow.python.keras.engine import network
 
   if not check_pydot():
     if 'IPython.core.magics.namespace' in sys.modules:
@@ -142,7 +144,7 @@ def model_to_dot(model,
         pass
 
     if isinstance(layer, wrappers.Wrapper):
-      if expand_nested and isinstance(layer.layer, network.Network):
+      if expand_nested and isinstance(layer.layer, Functional_or_Network):
         submodel_wrapper = model_to_dot(layer.layer, show_shapes,
                                         show_layer_names, rankdir,
                                         expand_nested,
@@ -157,7 +159,7 @@ def model_to_dot(model,
         child_class_name = layer.layer.__class__.__name__
         class_name = '{}({})'.format(class_name, child_class_name)
 
-    if expand_nested and isinstance(layer, network.Network):
+    if expand_nested and isinstance(layer, Functional_or_Network):
       submodel_not_wrapper = model_to_dot(layer, show_shapes,
                                           show_layer_names, rankdir,
                                           expand_nested,
@@ -181,16 +183,16 @@ def model_to_dot(model,
           if conv.findall(class_name_lower):
             label = '{}:{},{}|kernel:{}  strides:{}'.format(layer_name,
                                                             class_name,
-                                                            config['padding'],
-                                                            config['kernel_size'],
-                                                            config['strides'] )
+                                                            config.get('padding', 'na'),
+                                                            config.get('kernel_size', 'na'),
+                                                            config.get('strides', 'na'))
           pool = re.compile('pool')
           if pool.findall(class_name_lower) and class_name_lower[:6]!='global':
             label = '{}:{},{}|kernel:{}  strides:{}'.format(layer_name,
                                                             class_name,
-                                                            config['padding'],
-                                                            config['pool_size'],
-                                                            config['strides'] )   
+                                                            config.get('padding', 'na'),
+                                                            config.get('pool_size', 'na'),
+                                                            config.get('strides', 'na'))
           activation = re.compile('activation')
           if activation.findall(class_name_lower):
             label = '{}:{}|{}'.format(layer_name,
@@ -217,15 +219,15 @@ def model_to_dot(model,
           conv = re.compile('conv')
           if conv.findall(class_name_lower):
             label = '{},{}|kernel:{}  strides:{}'.format(class_name,
-                                                         config['padding'],
-                                                         config['kernel_size'],
-                                                         config['strides'])
+                                                         config.get('padding', 'na'),
+                                                         config.get('kernel_size', 'na'),
+                                                         config.get('strides', 'na'))
           pool = re.compile('pool')
           if pool.findall(class_name_lower) and class_name_lower[:6]!='global':
             label = '{},{}|kernel:{}  strides:{}'.format(class_name,
-                                                         config['padding'],
-                                                         config['pool_size'],
-                                                         config['strides']) 
+                                                         config.get('padding', 'na'),
+                                                         config.get('pool_size', 'na'),
+                                                         config.get('strides', 'na'))
           activation = re.compile('activation')
           if activation.findall(class_name_lower):
             label = '{}|{}'.format(class_name,
@@ -276,7 +278,7 @@ def model_to_dot(model,
                                                       outputlabels)
  
 
-    if not expand_nested or not isinstance(layer, network.Network):
+    if not expand_nested or not isinstance(layer, Functional_or_Network):
       if color == True:
         inputs = re.compile('input')
         conv = re.compile('conv')
@@ -342,10 +344,10 @@ def model_to_dot(model,
               add_edge(dot, inbound_layer_id, layer_id)
           else:
             # if inbound_layer is not Model or wrapped Model
-            if (not isinstance(inbound_layer, network.Network) and
+            if (not isinstance(inbound_layer, Functional_or_Network) and
                 not is_wrapped_model(inbound_layer)):
               # if current layer is not Model or wrapped Model
-              if (not isinstance(layer, network.Network) and
+              if (not isinstance(layer, Functional_or_Network) and
                   not is_wrapped_model(layer)):
                 assert dot.get_node(inbound_layer_id)
                 assert dot.get_node(layer_id)
@@ -357,7 +359,7 @@ def model_to_dot(model,
                 elif style == 1:
                   add_edge(dot, inbound_layer_id, layer_id)
               # if current layer is Model
-              elif isinstance(layer, network.Network):
+              elif isinstance(layer, Functional_or_Network):
                 if style == 0:
                   add_edge(dot, inbound_layer_id,
                           sub_n_first_node[layer.name].get_name(),
@@ -379,9 +381,9 @@ def model_to_dot(model,
                   name = sub_w_first_node[layer.layer.name].get_name()
                   add_edge(dot, layer_id, name)
             # if inbound_layer is Model
-            elif isinstance(inbound_layer, network.Network):
+            elif isinstance(inbound_layer, Functional_or_Network):
               name = sub_n_last_node[inbound_layer.name].get_name()
-              if isinstance(layer, network.Network):
+              if isinstance(layer, Functional_or_Network):
                 output_name = sub_n_first_node[layer.name].get_name()
                 if style == 0:
                   try:
@@ -421,15 +423,30 @@ def model_to_dot(model,
 
 
 def plot_model(model,
-         	to_file='model.png',
-         	show_shapes=True,
-         	show_layer_names=False,
-         	rankdir='TB',
-         	expand_nested=False,
-          style = 0,
-          color = True,
-         	dpi=96):
+               to_file='model.png',
+               show_shapes=True,
+               show_layer_names=False,
+               rankdir='TB',
+               expand_nested=False,
+               style = 0,
+               color = True,
+               dpi=96):
   """Converts a Keras model to dot format and save to a file.
+
+  Example:
+
+  >>> import tensorflow as tf
+  >>> input = tf.keras.Input(shape=(100,), dtype='int32', name='input')
+  >>> x = tf.keras.layers.Embedding(output_dim=512, input_dim=10000, input_length=100)(input)
+  >>> x = tf.keras.layers.LSTM(32)(x)
+  >>> x = tf.keras.layers.Dense(64, activation='relu')(x)
+  >>> x = tf.keras.layers.Dense(64, activation='relu')(x)
+  >>> x = tf.keras.layers.Dense(64, activation='relu')(x)
+  >>> output = tf.keras.layers.Dense(1, activation='sigmoid', name='output')(x)
+  >>> model = tf.keras.Model(inputs=[input], outputs=[output])
+  >>> dot_img_file = '/tmp/model_1.png'
+  >>> plot_model(model, to_file=dot_img_file, show_shapes=True)
+  <IPython.core.display.Image object>
 
   Arguments:
     model: A Keras model instance
