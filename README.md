@@ -1,5 +1,8 @@
 ## plot_model
 
+After some changing of code, now should be able to run with tensorflow 2.6.4, for other using package information, you can see in My environments.txt
+, my project can using the following package and success to run the plot_mode.
+
 GitHub:[https://github.com/Qinbf/plot_model.git](https://github.com/Qinbf/plot_model.git)
 
 plot_model is a API for model visualization reference to [tensorflow.keras.utils.plot_model](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/utils/vis_utils.py).
@@ -16,11 +19,12 @@ Before installing plot_model, please install one of its engines: **TensorFlow**,
 You may also consider installing the following :
 
 ```sh
-pip install pydot
-pip install pydot_ng
+pip install pydotplus
 pip install graphviz
 ```
-- Finally,download and install [graphviz](https://graphviz.gitlab.io/download/) to plot model graphs.
+- !!!!! Finally,download and install [graphviz](https://graphviz.gitlab.io/download/) to plot model graphs. !!!!!
+- !!!!! Finally,download and install [graphviz](https://graphviz.gitlab.io/download/) to plot model graphs. !!!!!
+- !!!!! Finally,download and install [graphviz](https://graphviz.gitlab.io/download/) to plot model graphs. !!!!!
 
 Then, you can install plot_model itself. There are two ways to install plot_model:
 
@@ -66,7 +70,7 @@ plot_model(model)
 
 default parameters:
 ```python
-plot_model(model, to_file='model.png', show_shapes=True, show_layer_names=False, rankdir='TB', expand_nested=False, style=0, color=True, dpi=96)
+plot_model(model, to_file='./model.png', show_shapes=True, show_layer_names=False, rankdir='TB', expand_nested=False, style=0, color=True, dpi=96)
 ```
 
 **color**: whether to display color. Default True.

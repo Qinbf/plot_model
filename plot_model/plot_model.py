@@ -88,7 +88,14 @@ def model_to_dot(model,
   """
   from tensorflow.python.keras.layers import wrappers
   from tensorflow.python.keras.engine import sequential
-  from tensorflow.python.keras.engine import network
+  try:
+    from tensorflow.python.keras.engine import network
+  except:
+    try:
+      from tensorflow.keras import Model as Network
+    except:
+      from tensorflow.python.keras.engine.training import Model
+      from tensorflow.python.keras.utils.layer_utils import get_source_inputs
 
   if not check_pydot():
     if 'IPython.core.magics.namespace' in sys.modules:
@@ -124,7 +131,7 @@ def model_to_dot(model,
   elif isinstance(model, sequential.Sequential):
     if not model.built:
       model.build()
-  layers = model._layers
+  layers = model.layers
   num_layers = len(layers)
 
   # Create graph nodes.
@@ -421,13 +428,13 @@ def model_to_dot(model,
 
 
 def plot_model(model,
-         	to_file='model.png',
+         	to_file='./model.png',
          	show_shapes=True,
          	show_layer_names=False,
          	rankdir='TB',
          	expand_nested=False,
-          style = 0,
-          color = True,
+            style = 0,
+            color = True,
          	dpi=96):
   """Converts a Keras model to dot format and save to a file.
 
